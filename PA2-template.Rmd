@@ -1,0 +1,8 @@
+```{r echo=TRUE, cache=TRUE}
+setwd("D:\\Coursera\\Reproducible Research\\RepData_PeerAssessment2")
+library(knitr)
+library(ggplot2)
+library(dplyr)
+data <- read.csv("data/repdata-data-StormData.csv.bz2")
+str(data)
+```
