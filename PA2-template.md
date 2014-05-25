@@ -3,15 +3,13 @@ Exploring the NOAA Storm Database to uncover the events with biggest effect on P
 
 Synopsis
 ---------------------------
-describes and summarizes the data analysis in less than 10 sentences
-
 The purpose of this report is to use the information stored in the  NOAA Storm Database to find out which types of events have the most severe effects on Population Health and the Economy. This is **important**, because if we are able to **stratify** these events with respect to the aforementioned categories, given the fact that there are **finite resources that can be dedicated for prevention and protection against these events**, we can focus these resources to target the events with the biggest impact, thus **maximizing the efficiency of those resources**.
 
 We will start with an exploration of the data, in an attempt to find out what sort of information is included, which are the variables in the dataset we need to focus on, whether we need to clean or impute the data and in general any assumptions we need to have in mind for our analysis.
 
 The questions we are looking to answer do not require statistical inference. As a starting point, descriptive statistics should provide us with enough understanding to answer. However, it might be meaningfull to retrospectively look for other underlying relations in our data.
 
-After loading and processing the dataset, we will do any necessary transformations 
+After loading and processing the dataset, we will identify the variables of interest and aggregate the resulting effects by events with respect to these variables.
 Data Processing
 ---------------
 describes how the data were loaded into R and processed for analysis
@@ -41,6 +39,8 @@ library(dplyr)
 ##     intersect, setdiff, setequal, union
 ```
 
+
+We start with the raw data source designated for the assignment.
 
 
 ```r
@@ -108,7 +108,7 @@ df_by_event <- group_by(df, EVTYPE)
 
 Results
 =======
-the main results are presented
+In this section we will be presenting our results
 
 Types of events that are most harmful with respect to population health
 ------------------------------------------------------------------------
@@ -136,12 +136,14 @@ pop_health <- summarise(df_by_event, Fatalities = sum(FATALITIES), Injuries = su
 ## 10      AVALANCHE        224      170
 ```
 
+We have kept only the top ten results, as there is a high number of different events. We need to keep in mind that this way we might miss an event with low impact on fatalities but high impact on injuries.
 
+As we can see TORNADO is the event with the most fatalities, at the same time having the highest impact on injuries.
 
 ```r
 g1 <- ggplot(pop_health, aes(x = EVTYPE, y = Fatalities, fill = Injuries)) + 
     geom_bar(stat = "identity")
-g1 + theme_bw() + ggtitle("Fatalities and injuriesby event type")
+g1 + theme_bw() + ggtitle("Fatalities and injuriesby event type") + xlab("Event Type")
 ```
 
 ![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
@@ -173,15 +175,40 @@ economy <- summarise(df_by_event, Property = sum(PROPDMG), Crop = sum(CROPDMG)) 
 ## 10       WINTER STORM   132721   1979
 ```
 
+We have kept the top ten events with respect to property damage. We need to keep in mind that this way we might miss an event that has low impact on property damage but very high impact on crops damage.
+
+
+We can see that TORNADO seems to have the highest economic impact on property, but HAIL has the highest impact on crops
 
 
 ```r
 g2 <- ggplot(economy, aes(x = EVTYPE, y = Property, fill = Crop)) + geom_bar(stat = "identity")
-g2 + theme_bw() + ggtitle("Economic effects by event type")
+g2 + theme_bw() + ggtitle("Economic effects by event type") + xlab("Event Type")
 ```
 
 ![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
 
 
-Conclusions
-===========
+Based on the previous it is worth to visualise the combined economic impact by events for both crops and property.
+For this we will need to produce a slightly different summary of the data.
+
+
+```r
+economy_combined <- summarise(df_by_event, Combined_Impact = sum(PROPDMG) + 
+    sum(CROPDMG)) %.% arrange(desc(Combined_Impact))
+economy_combined <- economy_combined[1:10, ]
+```
+
+
+Now we will examine again the combined economic impact by event type.
+
+
+```r
+g3 <- ggplot(economy_combined, aes(x = EVTYPE, y = Combined_Impact)) + geom_bar(stat = "identity")
+g3 + theme_bw() + ggtitle("Combined economic effects (crop and property) by event type") + 
+    xlab("Event Type")
+```
+
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10.png) 
+
+As we can see, TORNADO has the highest economic impact for combined crop and property damage.
